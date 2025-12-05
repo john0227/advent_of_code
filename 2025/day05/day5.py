@@ -42,7 +42,13 @@ def is_fresh(intervals, ingredient_id) -> bool:
     return False
 
 intervals = merge_intervals(intervals)
-ans = 0
+
+part1 = 0
 for iid in ingredient_ids:
-    ans += int(is_fresh(intervals, iid))
-print(ans)
+    part1 += int(is_fresh(intervals, iid))
+print(part1)
+
+part2 = 0
+for start, end in intervals:
+    part2 += end - start + 1
+print(part2)
