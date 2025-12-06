@@ -4,17 +4,27 @@ import sys
 fp = sys.argv[1]
 with open(fp, "r") as file:
     lines = [line for line in file.read().split("\n") if line]
-    numbers = [list(map(int, line.strip().split())) for line in lines[:-1]]
-    operations = lines[-1].strip().split()
+    numbers = lines[:-1]
+    operations = lines[-1]
 
-def calc(numbers: list[list[int]], operations: list[str]) -> int:
+def prod(numbers: list[int]):
+    res = 1
+    for num in numbers:
+        res *= num
+    return res
+
+def calc(numbers: list[str], operations: str):
     res = 0
-    for i, op in enumerate(operations):
-        f = (lambda a, b: a * b) if op == "*" else (lambda a, b: a + b)
-        r = 1 if op == "*" else 0
-        for row in numbers:
-            r = f(r, row[i])
-        res += r
+    num, nums = '', []
+    for c in range(len(numbers[0]) - 1, -1, -1):
+        num = ''.join(row[c].strip() for row in numbers)
+        if num:
+            nums.append(int(num))
+
+        if operations[c] in ("+", "*"):
+            res += sum(nums) if operations[c] == "+" else prod(nums)
+            nums = []
+        num = ''
     return res
 
 print(calc(numbers, operations))
