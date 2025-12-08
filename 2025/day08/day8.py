@@ -20,6 +20,7 @@ class UFDS:
     def __init__(self, n):
         self.roots = list(range(n))
         self.sizes = [1] * n
+        self.groups = n
 
     def find(self, x: int) -> int:
         r = self.roots[x]
@@ -40,6 +41,7 @@ class UFDS:
         self.roots[r2] = r1
         self.sizes[r1] += self.sizes[r2]
         self.sizes[r2] = 0
+        self.groups -= 1
         return True
 
 
@@ -60,16 +62,18 @@ def sort_by_weights(points: list[Point]) -> Heap:
     heapq.heapify(heap)
     return heap
 
-def kruskal(n: int, edges: Heap, connect: int = 1000):
+def kruskal(n: int, edges: Heap):
     ufds = UFDS(n)
-    while edges and connect > 0:
+    while edges:
         _, i, j = heapq.heappop(edges)
-        connect -= 1
         if not ufds.unify(i, j):
             continue
-    return ufds
+        if ufds.groups == 1:
+            return i, j
+    return -1, -1
 
 edges = sort_by_weights(points)
-res = kruskal(len(points), edges)
-top3 = sorted(res.sizes, reverse=True)[:3]
-print(top3[0] * top3[1] * top3[2])
+i, j = kruskal(len(points), edges)
+
+p1, p2 = points[i], points[j]
+print(p1.x * p2.x)
