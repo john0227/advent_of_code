@@ -10,30 +10,19 @@ with open(fp, "r") as file:
 def solve(grid: list[list[str]]) -> int:
     n, m = len(grid), len(grid[0])
     start = grid[0].index("S")
-    dq = deque([start])
-    row = 0
-    ans = 0
-    while row < n - 1:
-        visited = set()
-        for _ in range(len(dq)):
-            curr = dq.popleft()
-
-            if grid[row + 1][curr] != "^":
-                if curr not in visited:
-                    dq.append(curr)
-                    visited.add(curr)
+    dp = [[0] * m for _ in range(n)]
+    dp[0][start] = 1
+    for r, row in enumerate(dp):
+        if r == n - 1: break
+        for c, count in enumerate(row):
+            if dp[r][c] == 0:
                 continue
-
-            ans += 1
-            left = curr - 1
-            right = curr + 1
-            if 0 <= left and left not in visited:
-                dq.append(left)
-                visited.add(left)
-            if right < m and right not in visited:
-                dq.append(right)
-                visited.add(right)
-        row += 1
-    return ans
+            if grid[r + 1][c] != "^":
+                dp[r + 1][c] += count
+                continue
+            left, right = c - 1, c + 1
+            if 0 <= left: dp[r + 1][left] += count
+            if right < m: dp[r + 1][right] += count
+    return sum(dp[-1])
 
 print(solve(grid))
