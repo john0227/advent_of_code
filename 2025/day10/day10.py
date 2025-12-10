@@ -1,4 +1,5 @@
-from collections import deque
+import numpy as np
+import cvxpy as cp
 import sys
 
 
@@ -19,32 +20,52 @@ with open(fp, "r") as file:
 
         button = []
         for scheme in items[1:-1]:
-            b = 0
-            for i in map(int, scheme.strip("()").split(",")):
-                b |= 1 << i
-            button.append(b)
+            button.append(list(map(int, scheme.strip("()").split(","))))
         buttons.append(button)
 
         joltages.append(list(map(int, items[-1].strip("{}").split(","))))
 
-def bfs(light: int, buttons: list[int]):
-    dq = deque([0])
-    seen = {0}
-    min_presses = 0
-    while dq:
-        for _ in range(len(dq)):
-            curr = dq.popleft()
-            if curr == light:
-                return min_presses
-            for scheme in buttons:
-                next = curr ^ scheme
-                if next not in seen:
-                    dq.append(next)
-                    seen.add(next)
-        min_presses += 1
+def solve(buttons: list[list[int]], target_joltage: list[int]) -> int:
+    """
+    GIVEN:
+        buttons        := (n x m) matrix
+        target_joltage := (1 x m) matrix
+
+        where n := number of buttons
+              m := number of lights
+
+    FIND:
+        x := (n x 1) matrix, such that
+            Ax = b
+
+        where
+            A = buttons.T
+            b = target_joltage.T
+            sum(x) is minimized
+    """
+    button_mat = []
+    for scheme in buttons:
+        row = [0] * len(target_joltage)
+        for i in scheme:
+            row[i] += 1
+        button_mat.append(row)
+
+    button_mat = np.matrix(button_mat).T
+    target_mat = np.matrix(target_joltage)
+
+    # ILP solver
+    n = button_mat.shape[1]
+    x = cp.Variable(n, integer=True, nonneg=True)
+    objective = cp.Minimize(cp.sum(x))
+    constraints = [ button_mat @ x == target_mat ]
+    prob = cp.Problem(objective, constraints)
+    prob.solve()
+
+    if isinstance(x.value, np.ndarray):
+        return int(x.value.sum())
     return 0
 
 ans = 0
 for l, b, j in zip(lights, buttons, joltages):
-    ans += bfs(l, b)
+    ans += solve(b, j)
 print(ans)
