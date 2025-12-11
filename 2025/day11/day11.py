@@ -1,5 +1,4 @@
 from collections import defaultdict
-from functools import cache
 import sys
 
 
@@ -14,17 +13,31 @@ def make_graph(lines: list[str]) -> dict[str, list[str]]:
         graph[src].extend(dests.split())
     return graph
 
-def count_paths(graph, start: str = "you", end: str = "out") -> int:
-    @cache
-    def dfs(curr: str) -> int:
+def count_paths(graph, start: str = "you", end: str = "out", nodes_to_visit: set[str] | None =None) -> int:
+    def dfs(curr: str, to_visit: set[str]) -> int:
+        nonlocal memo
+
+        memokey = (curr, tuple(sorted(to_visit)))
+        if memokey in memo:
+            return memo[memokey]
+
         if curr == end:
-            return 1
+            return int(len(to_visit) == 0)
+
         res = 0
         for adj in graph[curr]:
-            res += dfs(adj)
+            to_visit.discard(adj)
+            res += dfs(adj, to_visit)
+            if adj in nodes_to_visit:
+                to_visit.add(adj)
+
+        memo[memokey] = res
         return res
-    return dfs(start)
+
+    memo = {}
+    to_visit = set(nodes_to_visit or set())
+    return dfs(start, to_visit)
 
 graph = make_graph(lines)
-ans = count_paths(graph)
+ans = count_paths(graph, start="svr", nodes_to_visit={"dac", "fft"})
 print(ans)
